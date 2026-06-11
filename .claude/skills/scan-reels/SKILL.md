@@ -1,3 +1,8 @@
+---
+name: scan-reels
+description: Quét ID Facebook Reels từ một đường dẫn Fanpage hoặc trang cá nhân, hỗ trợ lọc theo ngày đăng.
+---
+
 # Kỹ năng Quét ID Reels Facebook
 
 Khi người dùng chọn hoặc chạy kỹ năng này, bạn hãy thực hiện các bước sau:

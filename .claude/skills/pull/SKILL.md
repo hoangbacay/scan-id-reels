@@ -1,3 +1,8 @@
+---
+name: pull
+description: Kéo mã nguồn mới nhất từ kho lưu trữ GitHub về máy của bạn.
+---
+
 # Kỹ năng Pull Code từ GitHub
 
 Khi người dùng chọn hoặc chạy kỹ năng này, bạn hãy thực hiện các bước sau:

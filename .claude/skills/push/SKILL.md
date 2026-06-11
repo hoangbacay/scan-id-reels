@@ -1,3 +1,8 @@
+---
+name: push
+description: Tự động commit và đẩy toàn bộ thay đổi của mã nguồn lên GitHub.
+---
+
 # Kỹ năng Push Code lên GitHub
 
 Khi người dùng chọn hoặc chạy kỹ năng này, bạn hãy thực hiện các bước sau:
