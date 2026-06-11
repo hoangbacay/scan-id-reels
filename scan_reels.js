@@ -165,6 +165,20 @@ async function run() {
     viewport: { width: 1280, height: 800 }
   });
 
+  // Nạp cookie nếu có file cookies.json
+  const cookiesPath = path.join(__dirname, 'cookies.json');
+  if (fs.existsSync(cookiesPath)) {
+    try {
+      const cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf8'));
+      await context.addCookies(cookies);
+      console.log("[INFO] Đã nạp thành công cookies.json. Trình duyệt đang chạy ở chế độ ĐÃ ĐĂNG NHẬP.");
+    } catch (e) {
+      console.error("[LỖI] Không thể nạp cookies.json:", e.message);
+    }
+  } else {
+    console.log("[INFO] Không tìm thấy file cookies.json. Chạy ở chế độ KHÁCH VÃNG LAI (Giới hạn ~50 Reels).");
+  }
+
   const page = await context.newPage();
   
   try {
@@ -180,12 +194,6 @@ async function run() {
       const style = document.createElement('style');
       style.id = 'bypass-fb-login-overlay';
       style.innerHTML = `
-        div[role="dialog"], 
-        div[class*="login"], 
-        div[id*="login"],
-        div[style*="position: fixed"][style*="z-index:"] { 
-          display: none !important; 
-        }
         html, body { 
           overflow: auto !important; 
           overflow-y: auto !important;
@@ -195,9 +203,52 @@ async function run() {
       `;
       document.head.appendChild(style);
     });
-    
-    let lastHeight = await page.evaluate('document.body.scrollHeight');
+
+    async function closeDialogs() {
+      const dialogVisible = await page.evaluate(() => {
+        const dialog = document.querySelector('div[role="dialog"]');
+        return dialog ? true : false;
+      });
+      
+      if (dialogVisible) {
+        let clicked = false;
+        const selectors = [
+          'div[role="dialog"] div[aria-label="Đóng"]',
+          'div[role="dialog"] div[aria-label="Close"]',
+          '[aria-label="Đóng"]',
+          '[aria-label="Close"]',
+          '[aria-label="đóng"]',
+          '[aria-label="close"]'
+        ];
+        
+        for (const selector of selectors) {
+          try {
+            const el = await page.$(selector);
+            if (el) {
+              await el.click();
+              clicked = true;
+              break;
+            }
+          } catch (e) {}
+        }
+        
+        if (!clicked) {
+          await page.keyboard.press('Escape');
+        }
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Kiểm tra nếu modal vẫn tồn tại thì xóa cứng khỏi DOM
+        await page.evaluate(() => {
+          const dialog = document.querySelector('div[role="dialog"]');
+          if (dialog) {
+            dialog.remove();
+          }
+        });
+      }
+    }
+
     let noChangeCount = 0;
+    let lastReelsSize = 0;
     let scrollCount = 0;
     const allReelIds = new Set();
     const reelsMetadataMap = new Map(); // id -> { id, url, date }
@@ -208,11 +259,26 @@ async function run() {
     while (scrollCount < MAX_SCROLLS && !stopScanning) {
       scrollCount++;
       
-      // Cuộn xuống cuối trang
-      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+      // Tự động đóng modal đăng nhập nếu xuất hiện
+      await closeDialogs();
+      
+      // Cuộn xuống cuối trang (bao gồm cả window và các container cuộn bên trong)
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+        
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(el => {
+          if (el.scrollHeight > el.clientHeight && el.clientHeight > 100) {
+            el.scrollTo(0, el.scrollHeight);
+          }
+        });
+      });
+      
+      // Nhấn thêm phím PageDown để kích hoạt lazy loading
+      await page.keyboard.press('PageDown');
       
       // Chờ nội dung mới tải
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2500));
       
       // Quét DOM hiện tại để lấy các Reels link
       const pageReels = await page.evaluate(() => {
@@ -268,7 +334,6 @@ async function run() {
             console.log(`  + Reel ${reel.id}: Đăng ngày ${date.toLocaleDateString('vi-VN')} (${reel.dateStr})`);
 
             // Nếu ngày đăng cũ hơn mốc 'sinceDate' (ngày bắt đầu quét ngược về trước)
-            // Ví dụ: Lọc từ 9/6 đến 11/6. Gặp video ngày 8/6 => Video cũ quá rồi, dừng quét!
             if (sinceDate && date < sinceDate) {
               console.log(`[INFO] Phát hiện Reel đăng ngày ${reel.dateStr} nằm trước ngày giới hạn lọc (${process.argv[sinceIndex + 1]}). Dừng cuộn thêm.`);
               stopScanning = true;
@@ -286,18 +351,17 @@ async function run() {
 
       if (stopScanning) break;
 
-      // Kiểm tra chiều cao trang để dừng lại nếu đã cuộn hết trang
-      const newHeight = await page.evaluate('document.body.scrollHeight');
-      if (newHeight === lastHeight) {
+      // Sử dụng số lượng Reels thu thập được để kiểm tra xem trang còn tải thêm được không
+      if (allReelIds.size === lastReelsSize) {
         noChangeCount++;
         if (noChangeCount >= 4) {
-          console.log(`[INFO] Trang đã hết nội dung.`);
+          console.log(`[INFO] Đã 4 lượt cuộn liên tiếp không phát hiện thêm Reels mới. Dừng quét.`);
           break;
         }
       } else {
         noChangeCount = 0;
+        lastReelsSize = allReelIds.size;
       }
-      lastHeight = newHeight;
       
       // Bypass login overlay lại nếu xuất hiện thêm
       await page.evaluate(() => {
@@ -305,7 +369,6 @@ async function run() {
           const style = document.createElement('style');
           style.id = 'bypass-fb-login-overlay';
           style.innerHTML = `
-            div[role="dialog"] { display: none !important; }
             html, body { overflow: auto !important; overflow-y: auto !important; height: auto !important; }
           `;
           document.head.appendChild(style);

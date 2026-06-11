@@ -38,6 +38,17 @@ Khi quét hoàn tất, trình duyệt sẽ tự đóng. Hãy mở thư mục `ou
 ---
 
 ## Các tính năng ưu việt của script này:
-- **Tự động bypass chặn đăng nhập:** Khi không đăng nhập, Facebook thường hiển thị một thông báo bắt đăng nhập và khóa cuộn trang. Script này đã được tích hợp tính năng ẩn các hộp thoại chặn và ép trình duyệt cho phép cuộn bình thường.
+- **Tự động bypass chặn đăng nhập:** Khi không đăng nhập, Facebook thường hiển thị một thông báo bắt đăng nhập và khóa cuộn trang. Script này đã được tích hợp tính năng tự động đóng các hộp thoại chặn và ép trình duyệt cho phép cuộn bình thường.
 - **Tốc độ tải tối ưu:** Tự động chờ tải tài nguyên và cuộn trang liên tục đến khi hết nội dung mới.
 - **Tự động lọc trùng:** Đảm bảo mỗi Reels chỉ xuất hiện 1 lần duy nhất trong file kết quả.
+
+---
+
+## Bypass giới hạn cuộn nâng cao bằng Cookies (Khuyên dùng cho các trang lớn):
+Facebook giới hạn tài khoản khách vãng lai (không đăng nhập) chỉ được xem tối đa khoảng **50 - 70 Reels**. Để quét được nhiều hơn (hoặc toàn bộ hàng trăm Reels của một trang lớn), anh nên sử dụng cookie tài khoản Facebook của mình:
+
+1. Cài đặt tiện ích mở rộng xuất cookie trên Chrome/Edge (Ví dụ: **EditThisCookie** hoặc **Get cookies.txt LOCALLY**).
+2. Đăng nhập vào Facebook trên trình duyệt của anh.
+3. Sử dụng tiện ích mở rộng để xuất cookies dưới định dạng **JSON**.
+4. Tạo một file tên là `cookies.json` nằm trong thư mục gốc của dự án này (`E:\100X\Scan ID Reels\cookies.json`) và dán toàn bộ nội dung JSON vừa copy vào đó.
+5. Chạy lại lệnh quét. Script sẽ tự động nhận diện file `cookies.json` và chạy ở chế độ đăng nhập để quét không giới hạn!
