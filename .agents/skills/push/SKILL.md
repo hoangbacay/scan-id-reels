@@ -1,10 +1,10 @@
 ---
 name: push
-description: Tự động commit và đẩy toàn bộ thay đổi của mã nguồn lên GitHub.
+description: Rà soát thay đổi và xuất bản lên GitHub sau khi người dùng phê duyệt.
 ---
 
-# Kỹ năng Push Code lên GitHub
+# Rà soát và xuất bản
 
-Khi người dùng chọn hoặc chạy kỹ năng này, bạn hãy thực hiện các bước sau:
-1. Tự động chạy lệnh terminal: `npm run push` để lưu lại toàn bộ thay đổi, tạo commit tự động và đẩy code lên kho lưu trữ GitHub của người dùng.
-2. Theo dõi tiến trình chạy và thông báo kết quả chi tiết (thành công hay thất bại) cho người dùng ngay trong khung chat.
+- Chạy npm run review rồi xem diff đã stage và chưa stage. Kiểm tra tệp phát sinh và thông tin nhạy cảm.
+- Báo cáo thay đổi, kiểm thử và đề xuất commit message. Chờ phê duyệt trước khi commit.
+- Xác nhận nhánh và remote đích. Chờ phê duyệt push trước khi đẩy thay đổi.

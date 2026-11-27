@@ -10,8 +10,14 @@ Kết quả sẽ được lưu vào thư mục con đặt tên theo ngày quét 
 
 ## Cách chạy công cụ trên máy của anh:
 
-### Bước 1: Mở terminal/CMD tại thư mục này
-Nhấp chuột phải vào thư mục `Scan ID Reels` và chọn **Open in Terminal** (hoặc mở CMD rồi gõ `cd "E:\100X\Scan ID Reels"`).
+### Bước 1: Cài đặt trong thư mục dự án
+
+Mở terminal tại thư mục dự án. Dùng Node.js 18 trở lên, sau đó chạy:
+
+    npm ci
+    npx playwright install chromium
+
+Chạy npm test để kiểm tra bộ lọc ngày cục bộ.
 
 ### Bước 2: Chạy lệnh quét Reels
 
@@ -20,7 +26,7 @@ Nhấp chuột phải vào thư mục `Scan ID Reels` và chọn **Open in Termi
 node scan_reels.js <Đường-dẫn-trang-reels>
 ```
 
-**Cách 2: Quét kèm bộ lọc khoảng thời gian (Định dạng ngày YYYY-MM-DD)**
+**Cách 2: Quét kèm bộ lọc khoảng thời gian (YYYY-MM-DD, DD/MM/YYYY hoặc DD-MM-YYYY)**
 - `--since <ngày-bắt-đầu>`: Lấy các video đăng từ ngày này trở về sau.
 - `--until <ngày-kết-thúc>`: Lấy các video đăng từ ngày này trở về trước.
 

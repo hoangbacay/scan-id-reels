@@ -1,11 +1,6 @@
 @echo off
-echo ==========================================
-echo [DONG BO] Dang day code len GitHub...
-echo ==========================================
-git add .
-git commit -m "Auto sync"
-git push
-echo ==========================================
-echo [HOAN THANH] Da day code len GitHub xong!
-echo ==========================================
-pause
+pushd "%~dp0" || exit /b 1
+call npm run review
+set "REVIEW_EXIT=%ERRORLEVEL%"
+popd
+exit /b %REVIEW_EXIT%

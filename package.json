@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "push": "git add . && git commit -m \"Auto sync\" && git push",
+    "test": "node --test",
+    "review": "git status --short --branch && git diff --stat && git diff --cached --stat",
     "pull": "git pull"
   },
   "keywords": [],

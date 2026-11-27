@@ -66,25 +66,24 @@ async function getReelCreationTime(context, url) {
 // Hàm chuyển đổi ngày từ định dạng người dùng (hỗ trợ DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
 function parseUserDate(dateStr) {
   if (!dateStr) return null;
-  
-  // Regex kiểm tra dạng DD/MM/YYYY hoặc DD-MM-YYYY
-  const regex = /^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/;
-  const match = dateStr.trim().match(regex);
-  if (match) {
-    const day = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10) - 1; // Tháng trong JS bắt đầu từ 0
-    const year = parseInt(match[3], 10);
-    const date = new Date(year, month, day);
-    if (!isNaN(date.getTime())) return date;
+
+  const input = dateStr.trim();
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input);
+  const local = /^(\d{1,2})([/-])(\d{1,2})\2(\d{4})$/.exec(input);
+  if (!iso && !local) return null;
+
+  const [year, month, day] = (iso
+    ? iso.slice(1)
+    : [local[4], local[3], local[1]]
+  ).map(Number);
+
+  const date = new Date(0);
+  date.setHours(0, 0, 0, 0);
+  date.setFullYear(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
   }
-  
-  // Thử parse bằng hàm Date mặc định (hỗ trợ YYYY-MM-DD)
-  const fallbackDate = new Date(dateStr.trim());
-  if (!isNaN(fallbackDate.getTime())) {
-    return fallbackDate;
-  }
-  
-  return null;
+  return date;
 }
 
 async function run() {
@@ -103,22 +102,27 @@ async function run() {
   let sinceDate = null;
   let untilDate = null;
   
-  if (sinceIndex !== -1 && process.argv[sinceIndex + 1]) {
+  if (sinceIndex !== -1) {
     sinceDate = parseUserDate(process.argv[sinceIndex + 1]);
     if (!sinceDate) {
-      console.error("[LỖI] Định dạng ngày --since không hợp lệ. Vui lòng dùng định dạng ngày Việt Nam DD/MM/YYYY (Ví dụ: 09/06/2026)");
+      console.error("[LỖI] Ngày --since không hợp lệ hoặc bị thiếu. Hãy dùng DD/MM/YYYY, DD-MM-YYYY hoặc YYYY-MM-DD (Ví dụ: 09/06/2026)");
       process.exit(1);
     }
     sinceDate.setHours(0, 0, 0, 0); // Bắt đầu ngày
   }
   
-  if (untilIndex !== -1 && process.argv[untilIndex + 1]) {
+  if (untilIndex !== -1) {
     untilDate = parseUserDate(process.argv[untilIndex + 1]);
     if (!untilDate) {
-      console.error("[LỖI] Định dạng ngày --until không hợp lệ. Vui lòng dùng định dạng ngày Việt Nam DD/MM/YYYY (Ví dụ: 11/06/2026)");
+      console.error("[LỖI] Ngày --until không hợp lệ hoặc bị thiếu. Hãy dùng DD/MM/YYYY, DD-MM-YYYY hoặc YYYY-MM-DD (Ví dụ: 11/06/2026)");
       process.exit(1);
     }
     untilDate.setHours(23, 59, 59, 999); // Cuối ngày
+  }
+
+  if (sinceDate && untilDate && sinceDate > untilDate) {
+    console.error("[LỖI] Ngày --since phải trước hoặc bằng ngày --until.");
+    process.exit(1);
   }
 
   console.log(`\n==================================================`);
@@ -458,4 +462,8 @@ async function run() {
   }
 }
 
-run();
+if (require.main === module) {
+  run();
+}
+
+module.exports = { parseUserDate };
